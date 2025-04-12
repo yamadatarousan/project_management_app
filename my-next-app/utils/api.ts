@@ -33,4 +33,15 @@ export const createProject = async (project: Omit<Project, 'id' | 'created_at' |
   return response.data;
 };
 
+// プロジェクトを更新
+export const updateProject = async (id: number, project: Omit<Project, 'id' | 'created_at' | 'updated_at'>): Promise<Project> => {
+  const response = await api.put(`/projects/${id}`, project);
+  return response.data;
+};
+
+// プロジェクトを削除
+export const deleteProject = async (id: number): Promise<void> => {
+  await api.delete(`/projects/${id}`);
+};
+
 export default api;
