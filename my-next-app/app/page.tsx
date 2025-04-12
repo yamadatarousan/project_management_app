@@ -2,24 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { getProjects, Project } from '@/utils/api';
+import ProjectForm from '@/components/ProjectForm';
 
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await getProjects();
-        setProjects(data);
-      } catch (err) {
-        setError('Failed to fetch projects');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchProjects = async () => {
+    try {
+      const data = await getProjects();
+      setProjects(data);
+    } catch (err) {
+      setError('Failed to fetch projects');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProjects();
   }, []);
 
@@ -29,6 +30,7 @@ export default function Home() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Project Management App</h1>
+      <ProjectForm onProjectCreated={fetchProjects} />
       {projects.length === 0 ? (
         <p className="text-gray-500">No projects found.</p>
       ) : (
