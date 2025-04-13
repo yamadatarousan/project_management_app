@@ -10,13 +10,14 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null); // 削除中のプロジェクトID
 
   const fetchProjects = async () => {
     try {
       const data = await getProjects();
       setProjects(data);
     } catch (err) {
-      setError('Failed to fetch projects');
+      setError(err instanceof Error ? err.message : 'Failed to fetch projects');
     } finally {
       setLoading(false);
     }
@@ -36,11 +37,14 @@ export default function Home() {
 
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this project?')) {
+      setDeletingId(id);
       try {
         await deleteProject(id);
-        fetchProjects(); // 削除後に一覧を更新
+        fetchProjects();
       } catch (err) {
-        setError('Failed to delete project');
+        setError(err instanceof Error ? err.message : 'Failed to delete project');
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -49,51 +53,64 @@ export default function Home() {
   if (error) return <div className="text-center mt-10 text-red-500">{error}</div>;
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Project Management App</h1>
-      {editingProject ? (
-        <EditProjectForm
-          project={editingProject}
-          onProjectUpdated={() => {
-            fetchProjects();
-            setEditingProject(null);
-          }}
-          onCancel={handleCancelEdit}
-        />
-      ) : (
-        <ProjectForm onProjectCreated={fetchProjects} />
-      )}
-      {projects.length === 0 ? (
-        <p className="text-gray-500">No projects found.</p>
-      ) : (
-        <ul className="space-y-4">
-          {projects.map((project) => (
-            <li key={project.id} className="p-4 border rounded-lg shadow-sm flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-semibold">{project.title}</h2>
-                <p className="text-gray-600">{project.description || 'No description'}</p>
-                <p className="text-sm text-gray-500">
-                  Due: {project.due_date ? new Date(project.due_date).toLocaleDateString() : 'No due date'}
-                </p>
-              </div>
-              <div className="space-x-2">
-                <button
-                  onClick={() => handleEdit(project)}
-                  className="py-1 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(project.id)}
-                  className="py-1 px-3 bg-red-500 text-white rounded-md hover:bg-red-600"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="min-h-screen bg-gray-100">
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <h1 className="text-4xl font-extrabold mb-8 text-gray-800 text-center sm:text-left">
+          Project Management App
+        </h1>
+        {editingProject ? (
+          <EditProjectForm
+            project={editingProject}
+            onProjectUpdated={() => {
+              fetchProjects();
+              setEditingProject(null);
+            }}
+            onCancel={handleCancelEdit}
+          />
+        ) : (
+          <ProjectForm onProjectCreated={fetchProjects} />
+        )}
+        {projects.length === 0 ? (
+          <p className="text-gray-500 text-center text-lg">No projects found.</p>
+        ) : (
+          <ul className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project) => (
+              <li
+                key={project.id}
+                className="p-6 bg-white border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between"
+              >
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">{project.title}</h2>
+                  <p className="text-gray-600 mb-3">{project.description || 'No description'}</p>
+                  <p className="text-sm text-gray-500">
+                    Due: {project.due_date ? new Date(project.due_date).toLocaleDateString() : 'No due date'}
+                  </p>
+                </div>
+                <div className="mt-4 flex space-x-3">
+                  <button
+                    onClick={() => handleEdit(project)}
+                    className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    disabled={deletingId === project.id}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(project.id)}
+                    className={`flex-1 py-2 px-4 rounded-lg text-white ${
+                      deletingId === project.id
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-red-600 hover:bg-red-700'
+                    } transition-colors duration-200`}
+                    disabled={deletingId === project.id}
+                  >
+                    {deletingId === project.id ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

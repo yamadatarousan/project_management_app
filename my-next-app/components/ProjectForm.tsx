@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { createProject, Project } from '@/utils/api';
 
 interface ProjectFormProps {
-  onProjectCreated: () => void; // プロジェクト作成後に一覧を更新するためのコールバック
+  onProjectCreated: () => void;
 }
 
 export default function ProjectForm({ onProjectCreated }: ProjectFormProps) {
@@ -26,24 +26,23 @@ export default function ProjectForm({ onProjectCreated }: ProjectFormProps) {
         due_date: dueDate || undefined,
       };
       await createProject(newProject);
-      onProjectCreated(); // 作成後に一覧を更新
-      // フォームをリセット
+      onProjectCreated();
       setTitle('');
       setDescription('');
       setDueDate('');
     } catch (err) {
-      setError('Failed to create project');
+      setError(err instanceof Error ? err.message : 'Failed to create project');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-8 p-6 border rounded-lg shadow-sm bg-white">
-      <h2 className="text-2xl font-semibold mb-4">Create New Project</h2>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      <div className="mb-4">
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+    <form onSubmit={handleSubmit} className="mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-md max-w-lg mx-auto">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Create New Project</h2>
+      {error && <p className="text-red-500 mb-4 bg-red-50 p-3 rounded-md">{error}</p>}
+      <div className="mb-5">
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
           Title *
         </label>
         <input
@@ -51,24 +50,24 @@ export default function ProjectForm({ onProjectCreated }: ProjectFormProps) {
           id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
           required
         />
       </div>
-      <div className="mb-4">
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+      <div className="mb-5">
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
           Description
         </label>
         <textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
           rows={3}
         />
       </div>
-      <div className="mb-4">
-        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
+      <div className="mb-5">
+        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
           Due Date
         </label>
         <input
@@ -76,15 +75,15 @@ export default function ProjectForm({ onProjectCreated }: ProjectFormProps) {
           id="dueDate"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="mt-1 block w-full p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
         />
       </div>
       <button
         type="submit"
         disabled={loading}
-        className={`w-full py-2 px-4 rounded-md text-white ${
+        className={`w-full py-3 px-4 rounded-lg text-white font-medium ${
           loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
-        }`}
+        } transition-colors duration-200`}
       >
         {loading ? 'Creating...' : 'Create Project'}
       </button>

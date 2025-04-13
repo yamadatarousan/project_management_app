@@ -1,9 +1,7 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
-// Laravel APIのベースURL
 const API_URL = 'http://127.0.0.1:8000/api';
 
-// axiosインスタンスを作成
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -11,7 +9,28 @@ const api = axios.create({
   },
 });
 
-// プロジェクトの型定義
+// エラーメッセージを抽出する関数
+interface ApiErrorResponse {
+  message: string;
+  errors?: Record<string, string[]>;
+}
+
+const getErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError<ApiErrorResponse>;
+    if (axiosError.response?.data) {
+      const { message, errors } = axiosError.response.data;
+      if (errors) {
+        return Object.values(errors)
+          .flat()
+          .join(', ') || message;
+      }
+      return message;
+    }
+  }
+  return 'An unexpected error occurred';
+};
+
 export interface Project {
   id: number;
   title: string;
@@ -21,27 +40,39 @@ export interface Project {
   updated_at: string;
 }
 
-// プロジェクト一覧を取得
 export const getProjects = async (): Promise<Project[]> => {
-  const response = await api.get('/projects');
-  return response.data;
+  try {
+    const response = await api.get('/projects');
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
 };
 
-// 新しいプロジェクトを作成
 export const createProject = async (project: Omit<Project, 'id' | 'created_at' | 'updated_at'>): Promise<Project> => {
-  const response = await api.post('/projects', project);
-  return response.data;
+  try {
+    const response = await api.post('/projects', project);
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
 };
 
-// プロジェクトを更新
 export const updateProject = async (id: number, project: Omit<Project, 'id' | 'created_at' | 'updated_at'>): Promise<Project> => {
-  const response = await api.put(`/projects/${id}`, project);
-  return response.data;
+  try {
+    const response = await api.put(`/projects/${id}`, project);
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
 };
 
-// プロジェクトを削除
 export const deleteProject = async (id: number): Promise<void> => {
-  await api.delete(`/projects/${id}`);
+  try {
+    await api.delete(`/projects/${id}`);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
 };
 
 export default api;
