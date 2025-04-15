@@ -7,15 +7,23 @@ import EditProjectForm from '@/components/EditProjectForm';
 
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]); // フィルタリング後のプロジェクト
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'in_progress' | 'completed'>('all'); // フィルターステート
 
   const fetchProjects = async () => {
     try {
       const data = await getProjects();
       setProjects(data);
+      // フィルタリングを適用
+      if (statusFilter === 'all') {
+        setFilteredProjects(data);
+      } else {
+        setFilteredProjects(data.filter((project) => project.status === statusFilter));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch projects');
     } finally {
@@ -26,6 +34,16 @@ export default function Home() {
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  // フィルターが変更されたときに再フィルタリング
+  const handleFilterChange = (newFilter: 'all' | 'in_progress' | 'completed') => {
+    setStatusFilter(newFilter);
+    if (newFilter === 'all') {
+      setFilteredProjects(projects);
+    } else {
+      setFilteredProjects(projects.filter((project) => project.status === newFilter));
+    }
+  };
 
   const handleEdit = (project: Project) => {
     setEditingProject(project);
@@ -70,11 +88,43 @@ export default function Home() {
         ) : (
           <ProjectForm onProjectCreated={fetchProjects} />
         )}
-        {projects.length === 0 ? (
+        <div className="mb-6 flex justify-center sm:justify-start space-x-4">
+          <button
+            onClick={() => handleFilterChange('all')}
+            className={`py-2 px-4 rounded-lg font-medium ${
+              statusFilter === 'all'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            } transition-colors duration-200`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => handleFilterChange('in_progress')}
+            className={`py-2 px-4 rounded-lg font-medium ${
+              statusFilter === 'in_progress'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            } transition-colors duration-200`}
+          >
+            In Progress
+          </button>
+          <button
+            onClick={() => handleFilterChange('completed')}
+            className={`py-2 px-4 rounded-lg font-medium ${
+              statusFilter === 'completed'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            } transition-colors duration-200`}
+          >
+            Completed
+          </button>
+        </div>
+        {filteredProjects.length === 0 ? (
           <p className="text-gray-500 text-center text-lg">No projects found.</p>
         ) : (
           <ul className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <li
                 key={project.id}
                 className={`p-6 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between ${
