@@ -11,6 +11,7 @@ export default function ProjectForm({ onProjectCreated }: ProjectFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [status, setStatus] = useState<'in_progress' | 'completed'>('in_progress'); // ステータスを追加
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,12 +25,14 @@ export default function ProjectForm({ onProjectCreated }: ProjectFormProps) {
         title,
         description: description || undefined,
         due_date: dueDate || undefined,
+        status, // ステータスを送信
       };
       await createProject(newProject);
       onProjectCreated();
       setTitle('');
       setDescription('');
       setDueDate('');
+      setStatus('in_progress'); // リセット
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create project');
     } finally {
@@ -77,6 +80,20 @@ export default function ProjectForm({ onProjectCreated }: ProjectFormProps) {
           onChange={(e) => setDueDate(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
         />
+      </div>
+      <div className="mb-5">
+        <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+          Status
+        </label>
+        <select
+          id="status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value as 'in_progress' | 'completed')}
+          className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+        >
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </select>
       </div>
       <button
         type="submit"

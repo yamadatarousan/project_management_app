@@ -32,13 +32,14 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 export interface Project {
-  id: number;
-  title: string;
-  description?: string;
-  due_date?: string;
-  created_at: string;
-  updated_at: string;
-}
+    id: number;
+    title: string;
+    description?: string;
+    due_date?: string;
+    status: 'in_progress' | 'completed'; // ステータスを追加
+    created_at: string;
+    updated_at: string;
+  }
 
 export const getProjects = async (): Promise<Project[]> => {
   try {

@@ -10,7 +10,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null); // 削除中のプロジェクトID
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchProjects = async () => {
     try {
@@ -77,13 +77,27 @@ export default function Home() {
             {projects.map((project) => (
               <li
                 key={project.id}
-                className="p-6 bg-white border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between"
+                className={`p-6 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between ${
+                  project.status === 'completed' ? 'bg-green-50' : 'bg-white'
+                }`}
               >
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800 mb-2">{project.title}</h2>
                   <p className="text-gray-600 mb-3">{project.description || 'No description'}</p>
                   <p className="text-sm text-gray-500">
                     Due: {project.due_date ? new Date(project.due_date).toLocaleDateString() : 'No due date'}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Status:{' '}
+                    <span
+                      className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
+                        project.status === 'completed'
+                          ? 'bg-green-200 text-green-800'
+                          : 'bg-yellow-200 text-yellow-800'
+                      }`}
+                    >
+                      {project.status === 'completed' ? 'Completed' : 'In Progress'}
+                    </span>
                   </p>
                 </div>
                 <div className="mt-4 flex space-x-3">

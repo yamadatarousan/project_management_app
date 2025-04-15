@@ -13,6 +13,7 @@ export default function EditProjectForm({ project, onProjectUpdated, onCancel }:
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description || '');
   const [dueDate, setDueDate] = useState(project.due_date || '');
+  const [status, setStatus] = useState<'in_progress' | 'completed'>(project.status); // ステータスを追加
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -26,6 +27,7 @@ export default function EditProjectForm({ project, onProjectUpdated, onCancel }:
         title,
         description: description || undefined,
         due_date: dueDate || undefined,
+        status, // ステータスを送信
       };
       await updateProject(project.id, updatedProject);
       onProjectUpdated();
@@ -76,6 +78,20 @@ export default function EditProjectForm({ project, onProjectUpdated, onCancel }:
           onChange={(e) => setDueDate(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
         />
+      </div>
+      <div className="mb-5">
+        <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+          Status
+        </label>
+        <select
+          id="status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value as 'in_progress' | 'completed')}
+          className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+        >
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </select>
       </div>
       <div className="flex space-x-4">
         <button
