@@ -10,8 +10,7 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::all();
-        return response()->json($projects);
+        return Project::all();
     }
 
     public function store(Request $request)
@@ -20,32 +19,38 @@ class ProjectController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
+            'status' => 'nullable|in:in_progress,completed', // ステータスをバリデーション
         ]);
 
-        $project = Project::create($validated);
-        return response()->json($project, 201);
+        return Project::create($validated);
     }
 
-    public function show(Project $project)
+    public function show($id)
     {
-        return response()->json($project);
+        return Project::findOrFail($id);
     }
 
-    public function update(Request $request, Project $project)
+    public function update(Request $request, $id)
     {
+        $project = Project::findOrFail($id);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
+            'status' => 'nullable|in:in_progress,completed',
         ]);
 
         $project->update($validated);
-        return response()->json($project);
+
+        return $project;
     }
 
-    public function destroy(Project $project)
+    public function destroy($id)
     {
+        $project = Project::findOrFail($id);
         $project->delete();
-        return response()->json(null, 204);
+
+        return response()->noContent();
     }
 }
