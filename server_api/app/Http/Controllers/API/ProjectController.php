@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Project;
 use Illuminate\Http\Request;
 
@@ -10,7 +9,7 @@ class ProjectController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Project::query();
+        $query = $request->user()->projects(); // ログインユーザーのプロジェクトのみ
 
         // フィルタリングの処理
         $status = $request->query('status');
@@ -43,20 +42,23 @@ class ProjectController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
-            'status' => 'nullable|in:in_progress,completed', // ステータスをバリデーション
+            'status' => 'nullable|in:in_progress,completed',
         ]);
 
-        return Project::create($validated);
+        $project = $request->user()->projects()->create($validated);
+
+        return $project;
     }
 
     public function show($id)
     {
-        return Project::findOrFail($id);
+        $project = $request->user()->projects()->findOrFail($id);
+        return $project;
     }
 
     public function update(Request $request, $id)
     {
-        $project = Project::findOrFail($id);
+        $project = $request->user()->projects()->findOrFail($id);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -70,9 +72,9 @@ class ProjectController extends Controller
         return $project;
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $project = Project::findOrFail($id);
+        $project = $request->user()->projects()->findOrFail($id);
         $project->delete();
 
         return response()->noContent();
