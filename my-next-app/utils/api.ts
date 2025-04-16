@@ -4,6 +4,23 @@ const api = axios.create({
   baseURL: 'http://127.0.0.1:8000/api',
 });
 
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    console.log('Token from localStorage:', token); // デバッグ用ログ
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('Authorization header set:', config.headers.Authorization); // デバッグ用ログ
+    } else {
+      console.log('No token found in localStorage');
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export interface Project {
   id: number;
   title: string;
@@ -12,7 +29,7 @@ export interface Project {
   status: 'in_progress' | 'completed';
   created_at: string;
   updated_at: string;
-  user_id?: number; // 追加
+  user_id?: number;
 }
 
 interface ApiErrorResponse {
