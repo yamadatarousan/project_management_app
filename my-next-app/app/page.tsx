@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { getProjects, Project, deleteProject } from '@/utils/api';
 import ProjectForm from '@/components/ProjectForm';
 import EditProjectForm from '@/components/EditProjectForm';
+import LoginForm from '@/components/LoginForm';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -16,15 +18,14 @@ export default function Home() {
     'title-asc' | 'title-desc' | 'due_date-asc' | 'due_date-desc'
   >('title-asc');
 
+  const { user, isAuthenticated, logout } = useAuth();
+
   const fetchProjects = async () => {
     try {
-      // ソートオプションをパース
       const [sortField, order] = sortOption.split('-') as [
         'title' | 'due_date',
         'asc' | 'desc'
       ];
-
-      // クエリパラメータを設定
       const params: {
         sort?: 'title' | 'due_date' | 'created_at';
         order?: 'asc' | 'desc';
@@ -34,7 +35,6 @@ export default function Home() {
         order,
         status: statusFilter !== 'all' ? statusFilter : undefined,
       };
-
       const data = await getProjects(params);
       setProjects(data);
     } catch (err) {
@@ -45,8 +45,12 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchProjects();
-  }, [statusFilter, sortOption]); // フィルターやソートが変わるたびに再取得
+    if (isAuthenticated) {
+      fetchProjects();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, statusFilter, sortOption]);
 
   const handleFilterChange = (newFilter: 'all' | 'in_progress' | 'completed') => {
     setStatusFilter(newFilter);
@@ -83,12 +87,36 @@ export default function Home() {
   if (loading) return <div className="text-center mt-10">Loading...</div>;
   if (error) return <div className="text-center mt-10 text-red-500">{error}</div>;
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+          <h1 className="text-4xl font-extrabold mb-8 text-gray-800 text-center sm:text-left">
+            Project Management App
+          </h1>
+          <LoginForm />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-        <h1 className="text-4xl font-extrabold mb-8 text-gray-800 text-center sm:text-left">
-          Project Management App
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-extrabold text-gray-800">
+            Project Management App
+          </h1>
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-700">Welcome, {user?.name}</span>
+            <button
+              onClick={logout}
+              className="py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
         {editingProject ? (
           <EditProjectForm
             project={editingProject}

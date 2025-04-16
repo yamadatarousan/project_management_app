@@ -12,6 +12,7 @@ export interface Project {
   status: 'in_progress' | 'completed';
   created_at: string;
   updated_at: string;
+  user_id?: number; // 追加
 }
 
 interface ApiErrorResponse {
@@ -35,7 +36,6 @@ const getErrorMessage = (error: unknown): string => {
   return 'An unexpected error occurred';
 };
 
-// クエリパラメータを受け取るように修正
 export const getProjects = async (params: {
   sort?: 'title' | 'due_date' | 'created_at';
   order?: 'asc' | 'desc';
@@ -50,7 +50,7 @@ export const getProjects = async (params: {
 };
 
 export const createProject = async (
-  project: Omit<Project, 'id' | 'created_at' | 'updated_at'>
+  project: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'user_id'>
 ): Promise<Project> => {
   try {
     const response = await api.post('/projects', project);
@@ -62,7 +62,7 @@ export const createProject = async (
 
 export const updateProject = async (
   id: number,
-  project: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at'>>
+  project: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at' | 'user_id'>>
 ): Promise<Project> => {
   try {
     const response = await api.put(`/projects/${id}`, project);
