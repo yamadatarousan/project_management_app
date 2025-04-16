@@ -7,7 +7,6 @@ import EditProjectForm from '@/components/EditProjectForm';
 
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -15,13 +14,29 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'in_progress' | 'completed'>('all');
   const [sortOption, setSortOption] = useState<
     'title-asc' | 'title-desc' | 'due_date-asc' | 'due_date-desc'
-  >('title-asc'); // ソートオプション
+  >('title-asc');
 
   const fetchProjects = async () => {
     try {
-      const data = await getProjects();
+      // ソートオプションをパース
+      const [sortField, order] = sortOption.split('-') as [
+        'title' | 'due_date',
+        'asc' | 'desc'
+      ];
+
+      // クエリパラメータを設定
+      const params: {
+        sort?: 'title' | 'due_date' | 'created_at';
+        order?: 'asc' | 'desc';
+        status?: 'in_progress' | 'completed';
+      } = {
+        sort: sortField,
+        order,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+      };
+
+      const data = await getProjects(params);
       setProjects(data);
-      applyFilterAndSort(data, statusFilter, sortOption);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch projects');
     } finally {
@@ -29,51 +44,18 @@ export default function Home() {
     }
   };
 
-  // フィルタリングとソートを適用する関数
-  const applyFilterAndSort = (
-    data: Project[],
-    filter: 'all' | 'in_progress' | 'completed',
-    sort: 'title-asc' | 'title-desc' | 'due_date-asc' | 'due_date-desc'
-  ) => {
-    // フィルタリング
-    let filtered = data;
-    if (filter !== 'all') {
-      filtered = data.filter((project) => project.status === filter);
-    }
-
-    // ソート
-    const sorted = [...filtered].sort((a, b) => {
-      if (sort === 'title-asc') {
-        return a.title.localeCompare(b.title);
-      } else if (sort === 'title-desc') {
-        return b.title.localeCompare(a.title);
-      } else if (sort === 'due_date-asc') {
-        const dateA = a.due_date ? new Date(a.due_date).getTime() : Infinity;
-        const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
-        return dateA - dateB;
-      } else if (sort === 'due_date-desc') {
-        const dateA = a.due_date ? new Date(a.due_date).getTime() : -Infinity;
-        const dateB = b.due_date ? new Date(b.due_date).getTime() : -Infinity;
-        return dateB - dateA;
-      }
-      return 0;
-    });
-
-    setFilteredProjects(sorted);
-  };
-
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [statusFilter, sortOption]); // フィルターやソートが変わるたびに再取得
 
   const handleFilterChange = (newFilter: 'all' | 'in_progress' | 'completed') => {
     setStatusFilter(newFilter);
-    applyFilterAndSort(projects, newFilter, sortOption);
   };
 
-  const handleSortChange = (newSort: 'title-asc' | 'title-desc' | 'due_date-asc' | 'due_date-desc') => {
+  const handleSortChange = (
+    newSort: 'title-asc' | 'title-desc' | 'due_date-asc' | 'due_date-desc'
+  ) => {
     setSortOption(newSort);
-    applyFilterAndSort(projects, statusFilter, newSort);
   };
 
   const handleEdit = (project: Project) => {
@@ -173,11 +155,11 @@ export default function Home() {
             </select>
           </div>
         </div>
-        {filteredProjects.length === 0 ? (
+        {projects.length === 0 ? (
           <p className="text-gray-500 text-center text-lg">No projects found.</p>
         ) : (
           <ul className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.map((project) => (
+            {projects.map((project) => (
               <li
                 key={project.id}
                 className={`p-6 border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between ${

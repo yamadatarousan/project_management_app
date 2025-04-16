@@ -1,15 +1,19 @@
-import axios, { AxiosError } from 'axios';
-
-const API_URL = 'http://127.0.0.1:8000/api';
+import axios from 'axios';
 
 const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: 'http://127.0.0.1:8000/api',
 });
 
-// エラーメッセージを抽出する関数
+export interface Project {
+  id: number;
+  title: string;
+  description?: string;
+  due_date?: string;
+  status: 'in_progress' | 'completed';
+  created_at: string;
+  updated_at: string;
+}
+
 interface ApiErrorResponse {
   message: string;
   errors?: Record<string, string[]>;
@@ -31,26 +35,23 @@ const getErrorMessage = (error: unknown): string => {
   return 'An unexpected error occurred';
 };
 
-export interface Project {
-    id: number;
-    title: string;
-    description?: string;
-    due_date?: string;
-    status: 'in_progress' | 'completed'; // ステータスを追加
-    created_at: string;
-    updated_at: string;
-  }
-
-export const getProjects = async (): Promise<Project[]> => {
+// クエリパラメータを受け取るように修正
+export const getProjects = async (params: {
+  sort?: 'title' | 'due_date' | 'created_at';
+  order?: 'asc' | 'desc';
+  status?: 'in_progress' | 'completed';
+} = {}): Promise<Project[]> => {
   try {
-    const response = await api.get('/projects');
+    const response = await api.get('/projects', { params });
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
 };
 
-export const createProject = async (project: Omit<Project, 'id' | 'created_at' | 'updated_at'>): Promise<Project> => {
+export const createProject = async (
+  project: Omit<Project, 'id' | 'created_at' | 'updated_at'>
+): Promise<Project> => {
   try {
     const response = await api.post('/projects', project);
     return response.data;
@@ -59,7 +60,10 @@ export const createProject = async (project: Omit<Project, 'id' | 'created_at' |
   }
 };
 
-export const updateProject = async (id: number, project: Omit<Project, 'id' | 'created_at' | 'updated_at'>): Promise<Project> => {
+export const updateProject = async (
+  id: number,
+  project: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at'>>
+): Promise<Project> => {
   try {
     const response = await api.put(`/projects/${id}`, project);
     return response.data;
@@ -75,5 +79,3 @@ export const deleteProject = async (id: number): Promise<void> => {
     throw new Error(getErrorMessage(error));
   }
 };
-
-export default api;

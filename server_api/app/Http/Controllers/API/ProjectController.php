@@ -8,9 +8,33 @@ use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Project::all();
+        $query = Project::query();
+
+        // フィルタリングの処理
+        $status = $request->query('status');
+        if ($status && in_array($status, ['in_progress', 'completed'])) {
+            $query->where('status', $status);
+        }
+
+        // ソートの処理
+        $sort = $request->query('sort', 'title');
+        $order = $request->query('order', 'asc');
+
+        $allowedSorts = ['title', 'due_date', 'created_at'];
+        $sort = in_array($sort, $allowedSorts) ? $sort : 'title';
+
+        $allowedOrders = ['asc', 'desc'];
+        $order = in_array($order, $allowedOrders) ? $order : 'asc';
+
+        $query->orderBy($sort, $order);
+
+        if ($sort === 'due_date') {
+            $query->orderByRaw('ISNULL(due_date) ' . ($order === 'asc' ? 'ASC' : 'DESC'));
+        }
+
+        return $query->get();
     }
 
     public function store(Request $request)
